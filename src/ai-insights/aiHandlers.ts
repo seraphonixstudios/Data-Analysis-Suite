@@ -21,6 +21,9 @@ class AIInsightGenerator {
     try {
       let response;
       switch (provider) {
+        case 'ollama':
+          response = await this.callOllama(prompt, config.ai.ollama!);
+          break;
         case 'openai':
           response = await this.callOpenAI(prompt, config.ai.openai!);
           break;
@@ -53,6 +56,9 @@ class AIInsightGenerator {
       let response;
       
       switch (provider) {
+        case 'ollama':
+          response = await this.callOllama(prompt, config.ai.ollama!);
+          break;
         case 'openai':
           response = await this.callOpenAI(prompt, config.ai.openai!);
           break;
@@ -110,6 +116,27 @@ Focus on:
 
 Data: ${JSON.stringify(data, null, 2)}
 `;
+  }
+
+  private async callOllama(prompt: string, config: any): Promise<string> {
+    const axios = require('axios');
+    
+    const response = await axios.post(`${config.host}/api/generate`, {
+      model: config.model || 'llama3.2',
+      prompt: prompt,
+      stream: false,
+      options: {
+        temperature: 0.3,
+        num_predict: config.maxTokens || 500
+      }
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 60000
+    });
+
+    return response.data.response;
   }
 
   private async callOpenAI(prompt: string, config: any): Promise<string> {

@@ -3,6 +3,12 @@ import path from 'path';
 import os from 'os';
 
 interface AIConfig {
+  ollama?: {
+    host: string;
+    model: string;
+    maxTokens: number;
+    enabled: boolean;
+  };
   openai?: {
     apiKey: string;
     model: string;
@@ -88,6 +94,12 @@ export class ConfigManager {
   private getDefaultConfig(): AppConfig {
     return {
       ai: {
+        ollama: {
+          host: 'http://localhost:11434',
+          model: 'llama3.2',
+          maxTokens: 2000,
+          enabled: true
+        },
         openai: {
           apiKey: '',
           model: 'gpt-3.5-turbo',
@@ -158,11 +170,14 @@ export class ConfigManager {
 
   public isAIConfigured(): boolean {
     const ai = this.config.ai;
-    return !!(ai.openai?.apiKey || ai.anthropic?.apiKey || ai.custom?.apiKey);
+    // Ollama doesn't require API key, just needs to be enabled
+    return !!(ai.ollama?.enabled || ai.openai?.apiKey || ai.anthropic?.apiKey || ai.custom?.apiKey);
   }
 
   public getActiveAIProvider(): string {
     const ai = this.config.ai;
+    // Ollama is the default/first choice when enabled
+    if (ai.ollama?.enabled) return 'ollama';
     if (ai.openai?.apiKey) return 'openai';
     if (ai.anthropic?.apiKey) return 'anthropic';
     if (ai.custom?.apiKey) return 'custom';
